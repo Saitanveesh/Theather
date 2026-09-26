@@ -170,7 +170,6 @@ Only after low-power bench validation: calibrated irradiance, IEC 62471-aligned 
 ```bash
 git clone https://github.com/Saitanveesh/Theather.git
 cd Theather
-git checkout research-simulator-v1
 python -m http.server 8000
 ```
 
@@ -183,3 +182,49 @@ DEGRADE casual capture + INCREASE attacker effort + RETAIN optional traceability
 ```
 
 The security objective is measurable acquisition difficulty with acceptable viewer impact — not a claim that every conceivable camera can be made unusable.
+
+
+## Measurement dashboard
+
+The repository now includes `measurement-dashboard.html` for importing real bench data instead of relying only on simulation.
+
+It accepts `data/experiment_template.csv` and reports:
+
+- measured camera degradation from SSIM,
+- PSNR / banding / color-error fields,
+- viewer-impact field,
+- measured-vs-model scatter,
+- camera degradation vs viewer-impact Pareto plot,
+- model mean absolute error,
+- dataset audit for camera/frequency/wavelength diversity,
+- raw experiment ledger.
+
+Use `docs/MEASUREMENT_GUIDE.md` for the bench protocol.
+
+### Windows PowerShell
+
+```powershell
+git clone https://github.com/Saitanveesh/Theather.git
+cd Theather
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\run.ps1
+```
+
+The launcher opens:
+
+```text
+http://localhost:8000/
+http://localhost:8000/measurement-dashboard.html
+```
+
+Manual alternative:
+
+```powershell
+python -m http.server 8000
+```
+
+or:
+
+```powershell
+py -m http.server 8000
+```
