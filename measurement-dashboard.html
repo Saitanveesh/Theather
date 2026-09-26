@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Theatre Optical Security Lab — Measurement Dashboard</title>
+<style>
+:root{--bg:#07101d;--panel:#0d1a2b;--line:#223a55;--text:#edf4fb;--muted:#91a8c1;--cyan:#4ed0ff;--green:#5de0a0;--amber:#ffc857;--red:#ff7070}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 25% 0,#102641,#07101d 46%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:26px 28px;border-bottom:1px solid var(--line);background:rgba(5,13,24,.85);position:sticky;top:0;z-index:4;backdrop-filter:blur(10px)}
+h1{margin:0 0 6px;font-size:27px}.sub{color:var(--muted);max-width:1100px;line-height:1.5}
+main{max-width:1500px;margin:auto;padding:20px}.grid{display:grid;grid-template-columns:1fr 380px;gap:18px}.card{background:linear-gradient(180deg,#102038,#0b182a);border:1px solid var(--line);border-radius:15px;overflow:hidden}.head{padding:15px 17px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}.body{padding:16px 17px}
+.small{font-size:12px;color:var(--muted)}button,.fileLabel{display:inline-block;background:#173652;color:white;border:1px solid #315879;border-radius:9px;padding:9px 12px;font-weight:650;cursor:pointer}button:hover,.fileLabel:hover{background:#1c456a}input[type=file]{display:none}
+.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0}.metric{border:1px solid #223953;background:#071623;border-radius:10px;padding:12px}.metric .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}.metric .v{font-size:22px;font-weight:750;margin-top:4px}
+.cyan{color:var(--cyan)}.green{color:var(--green)}.amber{color:var(--amber)}.red{color:var(--red)}
+canvas{width:100%;display:block;border:1px solid #1d334b;background:#06111d;border-radius:10px}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.tableWrap{overflow:auto;max-height:420px}.table{width:100%;border-collapse:collapse;font-size:11px}.table th,.table td{padding:7px 8px;border-bottom:1px solid #1c324a;text-align:right;white-space:nowrap}.table th:first-child,.table td:first-child{text-align:left}.table th{position:sticky;top:0;background:#0d1a2b;color:#9eb2c7}
+.status{padding:12px;border:1px solid #29435e;background:#071724;border-radius:10px;font-size:12px;line-height:1.5}.good{border-color:#286b4d}.warn{border-color:#765b23}.bad{border-color:#7b3434}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.cols{font-size:11px;line-height:1.55;color:#a8bbcf;word-break:break-word}
+a{color:#65d2ff}.row{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:1050px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.two{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Measured Experiment Dashboard</h1>
+  <div class="sub">Load real photodiode/camera experiment CSV data, compare it with the simulator's simplified prediction, and expose where the model agrees or fails. No measured data is bundled as evidence; the included CSV is a schema template only.</div>
+</header>
+<main>
+<div class="grid">
+<section class="card">
+  <div class="head"><div><h2>Measured vs model</h2><div class="small">Frequency response and experimental quality metrics.</div></div><div class="row"><label class="fileLabel" for="file">Load CSV</label><input id="file" type="file" accept=".csv,text/csv"><button id="loadTemplate">Load template rows</button></div></div>
+  <div class="body">
+    <div class="metrics">
+      <div class="metric"><div class="l">rows loaded</div><div id="mRows" class="v cyan">0</div></div>
+      <div class="metric"><div class="l">camera models</div><div id="mCams" class="v cyan">0</div></div>
+      <div class="metric"><div class="l">mean measured degradation</div><div id="mDeg" class="v amber">—</div></div>
+      <div class="metric"><div class="l">mean viewer impact</div><div id="mView" class="v green">—</div></div>
+      <div class="metric"><div class="l">model MAE</div><div id="mMae" class="v red">—</div></div>
+    </div>
+    <canvas id="freqPlot" width="1000" height="330"></canvas>
+    <div class="two">
+      <div><div class="small" style="margin:0 0 6px">Measured degradation vs model prediction</div><canvas id="scatter" width="500" height="300"></canvas></div>
+      <div><div class="small" style="margin:0 0 6px">Viewer impact vs camera degradation</div><canvas id="pareto" width="500" height="300"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<aside class="card">
+  <div class="head"><div><h2>Dataset audit</h2><div class="small">Checks whether the experiment is publication-ready.</div></div></div>
+  <div class="body">
+    <div id="audit" class="status warn">Load a CSV to run the audit.</div>
+    <div style="height:12px"></div>
+    <h3>Required columns</h3>
+    <div class="cols"><code>experiment_id, camera_model, sensor_type, fps, exposure_ms, readout_ms, distance_m, wavelength_nm, frequency_hz, duty_cycle, modulation_depth, phase_spread_deg, screen_type, irradiance_w_m2, visible_lux, ssim, psnr_db, banding_energy, delta_e, viewer_impact_score, notes</code></div>
+    <div style="height:14px"></div>
+    <h3>Interpretation</h3>
+    <div class="small" style="line-height:1.6">
+      <b>Measured degradation</b> is derived as <code>100 × (1 − SSIM)</code> when SSIM is available. This is only one metric; PSNR, banding energy and color error should be reported separately in the paper.<br><br>
+      <b>Model MAE</b> compares that measured degradation with the simplified simulator prediction. A large MAE is useful: it tells us which physics or camera-processing terms the model is missing.
+    </div>
+  </div>
+</aside>
+</div>
+
+<section class="card" style="margin-top:18px">
+  <div class="head"><div><h2>Experiment ledger</h2><div class="small">Every imported measurement stays visible; no averaging hides the raw rows.</div></div><button id="exportClean">Export normalized CSV</button></div>
+  <div class="body tableWrap">
+    <table class="table"><thead><tr>
+      <th>ID</th><th>Camera</th><th>FPS</th><th>Exposure</th><th>Readout</th><th>λ</th><th>f</th><th>m</th><th>phase</th><th>irradiance</th><th>SSIM</th><th>PSNR</th><th>banding</th><th>ΔE</th><th>viewer</th><th>model deg.</th><th>measured deg.</th>
+    </tr></thead><tbody id="ledger"></tbody></table>
+  </div>
+</section>
+</main>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const required=["experiment_id","camera_model","sensor_type","fps","exposure_ms","readout_ms","distance_m","wavelength_nm","frequency_hz","duty_cycle","modulation_depth","phase_spread_deg","screen_type","irradiance_w_m2","visible_lux","ssim","psnr_db","banding_energy","delta_e","viewer_impact_score","notes"];
+let rows=[];
+
+function parseCSV(text){
+  const out=[]; let row=[],cell="",quote=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(ch==='"'){if(quote&&text[i+1]==='"'){cell+='"';i++}else quote=!quote}
+    else if(ch===','&&!quote){row.push(cell);cell=""}
+    else if((ch==='\n'||ch==='\r')&&!quote){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x.trim()!==""))out.push(row);row=[];cell=""}
+    else cell+=ch;
+  }
+  if(cell.length||row.length){row.push(cell);out.push(row)}
+  if(!out.length)return [];
+  const hdr=out[0].map(x=>x.trim());
+  return out.slice(1).map(r=>{const o={};hdr.forEach((h,i)=>o[h]=(r[i]??"").trim());return o});
+}
+function n(v){const x=Number(v);return Number.isFinite(x)?x:NaN}
+function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+function sinc(x){return Math.abs(x)<1e-12?1:Math.sin(Math.PI*x)/(Math.PI*x)}
+function specGain(wl){
+  if(!Number.isFinite(wl))return {human:.5,camera:.6};
+  if(wl<700)return {human:1,camera:1};
+  if(wl<900)return {human:0,camera:.58};
+  return {human:0,camera:.35};
+}
+function predict(r){
+  const f=n(r.frequency_hz),m=n(r.modulation_depth),d=n(r.duty_cycle),texp=n(r.exposure_ms)/1000,tread=n(r.readout_ms)/1000,phase=n(r.phase_spread_deg),wl=n(r.wavelength_nm);
+  if(![f,m,d,texp,tread,phase].every(Number.isFinite))return NaN;
+  const sp=specGain(wl), expAtt=Math.abs(sinc(f*texp)), phaseD=Math.abs(Math.sin((phase*Math.PI/180)/2));
+  const dutyPenalty=1-Math.abs(d-.5)*1.3;
+  const contrast=clamp(m*sp.camera*expAtt*dutyPenalty*(.68+.32*phaseD),0,1);
+  const instability=clamp(m*sp.camera*.28,0,1);
+  return clamp(100*(.76*contrast+.16*instability+.08*phaseD*sp.camera*m),0,100);
+}
+function measuredDeg(r){const s=n(r.ssim);return Number.isFinite(s)?clamp(100*(1-s),0,100):NaN}
+function mean(a){const x=a.filter(Number.isFinite);return x.length?x.reduce((p,c)=>p+c,0)/x.length:NaN}
+function uniq(a){return [...new Set(a.filter(Boolean))]}
+
+function audit(){
+  if(!rows.length){$("audit").className="status warn";$("audit").textContent="Load a CSV to run the audit.";return}
+  const keys=Object.keys(rows[0]),missing=required.filter(k=>!keys.includes(k));
+  const cams=uniq(rows.map(r=>r.camera_model)).length;
+  const freqs=uniq(rows.map(r=>r.frequency_hz)).length;
+  const waves=uniq(rows.map(r=>r.wavelength_nm)).length;
+  const hasIrr=rows.some(r=>Number.isFinite(n(r.irradiance_w_m2)));
+  const hasSSIM=rows.some(r=>Number.isFinite(n(r.ssim)));
+  const hasViewer=rows.some(r=>Number.isFinite(n(r.viewer_impact_score)));
+  const issues=[];
+  if(missing.length)issues.push("Missing columns: "+missing.join(", "));
+  if(cams<2)issues.push("Only one camera model represented.");
+  if(freqs<3)issues.push("Fewer than three modulation frequencies.");
+  if(waves<2)issues.push("No meaningful wavelength diversity.");
+  if(!hasIrr)issues.push("No calibrated irradiance data.");
+  if(!hasSSIM)issues.push("No SSIM camera-quality measurements.");
+  if(!hasViewer)issues.push("No viewer-impact values.");
+  const ok=!issues.length;
+  $("audit").className="status "+(ok?"good":"warn");
+  $("audit").innerHTML=(ok?"<b>Dataset passes the basic structural audit.</b>":"<b>Dataset is not publication-ready yet.</b>")+
+    "<br><br>Rows: "+rows.length+" · Cameras: "+cams+" · Frequencies: "+freqs+" · Wavelengths: "+waves+
+    (issues.length?"<br><br>Issues:<br>• "+issues.join("<br>• "):"");
+}
+function update(){
+  const preds=rows.map(predict),meas=rows.map(measuredDeg),views=rows.map(r=>n(r.viewer_impact_score));
+  const pairs=rows.map((r,i)=>[preds[i],meas[i]]).filter(p=>p.every(Number.isFinite));
+  const mae=mean(pairs.map(p=>Math.abs(p[0]-p[1])));
+  $("mRows").textContent=rows.length;$("mCams").textContent=uniq(rows.map(r=>r.camera_model)).length;
+  $("mDeg").textContent=Number.isFinite(mean(meas))?mean(meas).toFixed(1)+"/100":"—";
+  $("mView").textContent=Number.isFinite(mean(views))?mean(views).toFixed(2):"—";
+  $("mMae").textContent=Number.isFinite(mae)?mae.toFixed(1):"—";
+  $("ledger").innerHTML=rows.map(r=>"<tr><td>"+esc(r.experiment_id)+"</td><td>"+esc(r.camera_model)+"</td><td>"+fmt(r.fps,0)+"</td><td>"+fmt(r.exposure_ms,2)+" ms</td><td>"+fmt(r.readout_ms,2)+" ms</td><td>"+fmt(r.wavelength_nm,0)+" nm</td><td>"+fmt(r.frequency_hz,0)+" Hz</td><td>"+fmt(r.modulation_depth,2)+"</td><td>"+fmt(r.phase_spread_deg,0)+"°</td><td>"+fmt(r.irradiance_w_m2,4)+"</td><td>"+fmt(r.ssim,3)+"</td><td>"+fmt(r.psnr_db,1)+"</td><td>"+fmt(r.banding_energy,3)+"</td><td>"+fmt(r.delta_e,2)+"</td><td>"+fmt(r.viewer_impact_score,2)+"</td><td>"+fmt(predict(r),1)+"</td><td>"+fmt(measuredDeg(r),1)+"</td></tr>").join("");
+  audit();drawFreq();drawScatter();drawPareto();
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function fmt(v,d){const x=n(v);return Number.isFinite(x)?x.toFixed(d):"—"}
+function basePlot(canvas,xlab,ylab){
+  const c=canvas.getContext("2d"),w=canvas.width,h=canvas.height,L=58,R=18,T=22,B=42;c.clearRect(0,0,w,h);c.fillStyle="#06111d";c.fillRect(0,0,w,h);
+  c.strokeStyle="#28415a";c.lineWidth=1;for(let i=0;i<=4;i++){const y=T+(h-T-B)*i/4;c.beginPath();c.moveTo(L,y);c.lineTo(w-R,y);c.stroke()}
+  c.fillStyle="#91a8c1";c.font="11px system-ui";c.fillText(xlab,w/2-40,h-10);c.save();c.translate(14,h/2+40);c.rotate(-Math.PI/2);c.fillText(ylab,0,0);c.restore();
+  return {c,w,h,L,R,T,B};
+}
+function drawFreq(){
+  const p=basePlot($("freqPlot"),"frequency (Hz)","degradation / viewer impact");
+  const valid=rows.filter(r=>Number.isFinite(n(r.frequency_hz)));if(!valid.length)return;
+  const xs=valid.map(r=>n(r.frequency_hz)),xmin=Math.min(...xs),xmax=Math.max(...xs),span=Math.max(1,xmax-xmin);
+  function x(v){return p.L+(v-xmin)/span*(p.w-p.L-p.R)}function y(v){return p.T+(1-clamp(v,0,100)/100)*(p.h-p.T-p.B)}
+  valid.forEach(r=>{const md=measuredDeg(r),pred=predict(r),view=n(r.viewer_impact_score),xx=x(n(r.frequency_hz));
+    if(Number.isFinite(pred)){p.c.fillStyle="#52d3ff";p.c.beginPath();p.c.arc(xx,y(pred),4,0,Math.PI*2);p.c.fill()}
+    if(Number.isFinite(md)){p.c.fillStyle="#ffc857";p.c.beginPath();p.c.arc(xx,y(md),5,0,Math.PI*2);p.c.fill()}
+    if(Number.isFinite(view)){p.c.fillStyle="#5de0a0";p.c.beginPath();p.c.arc(xx,y(view),4,0,Math.PI*2);p.c.fill()}
+  });
+  p.c.fillStyle="#91a8c1";p.c.fillText(xmin.toFixed(0),p.L,p.h-23);p.c.fillText(xmax.toFixed(0),p.w-p.R-35,p.h-23);
+  p.c.fillStyle="#52d3ff";p.c.fillText("model",p.L+8,14);p.c.fillStyle="#ffc857";p.c.fillText("measured",p.L+58,14);p.c.fillStyle="#5de0a0";p.c.fillText("viewer",p.L+128,14);
+}
+function drawScatter(){
+  const p=basePlot($("scatter"),"model degradation","measured degradation");
+  p.c.strokeStyle="#536a80";p.c.setLineDash([5,5]);p.c.beginPath();p.c.moveTo(p.L,p.h-p.B);p.c.lineTo(p.w-p.R,p.T);p.c.stroke();p.c.setLineDash([]);
+  rows.forEach(r=>{const a=predict(r),b=measuredDeg(r);if(![a,b].every(Number.isFinite))return;const x=p.L+a/100*(p.w-p.L-p.R),y=p.T+(1-b/100)*(p.h-p.T-p.B);p.c.fillStyle="#ffc857";p.c.beginPath();p.c.arc(x,y,5,0,Math.PI*2);p.c.fill()});
+}
+function drawPareto(){
+  const p=basePlot($("pareto"),"viewer impact","measured degradation");
+  rows.forEach(r=>{const a=n(r.viewer_impact_score),b=measuredDeg(r);if(![a,b].every(Number.isFinite))return;const x=p.L+clamp(a,0,100)/100*(p.w-p.L-p.R),y=p.T+(1-b/100)*(p.h-p.T-p.B);p.c.fillStyle="#5de0a0";p.c.beginPath();p.c.arc(x,y,5,0,Math.PI*2);p.c.fill()});
+}
+$("file").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{rows=parseCSV(rd.result);update()};rd.readAsText(f)});
+$("loadTemplate").addEventListener("click",()=>{fetch("data/experiment_template.csv").then(r=>r.text()).then(t=>{rows=parseCSV(t);update()}).catch(()=>{$("audit").className="status bad";$("audit").textContent="Could not load data/experiment_template.csv. Run through a local HTTP server rather than opening the file directly."})});
+$("exportClean").addEventListener("click",()=>{
+  if(!rows.length)return;
+  const header=required.join(","),lines=rows.map(r=>required.map(k=>csvCell(r[k]??"")).join(","));
+  const blob=new Blob([[header,...lines].join("\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="normalized_experiments.csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)
+});
+function csvCell(v){const s=String(v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+experiment_id,camera_model,sensor_type,fps,exposure_ms,readout_ms,distance_m,wavelength_nm,frequency_hz,duty_cycle,modulation_depth,phase_spread_deg,screen_type,irradiance_w_m2,visible_lux,ssim,psnr_db,banding_energy,delta_e,viewer_impact_score,notes
+TEMPLATE-001,PHONE_A,rolling_shutter,30,8,18,4,530,240,0.50,0.30,0,matte_white,,,,,,,,"replace blanks with measured values"
+TEMPLATE-002,PHONE_A,rolling_shutter,30,8,18,4,850,720,0.50,0.50,120,matte_white,,,,,,,,"replace blanks with measured values"
+TEMPLATE-003,PHONE_B,rolling_shutter,60,4,10,4,940,1200,0.50,0.50,240,matte_white,,,,,,,,"replace blanks with measured values"
+TEMPLATE-004,GLOBAL_REF,global_shutter,60,4,0,4,850,720,0.50,0.50,120,matte_white,,,,,,,,"reference camera if available"
