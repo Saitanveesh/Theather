@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Theatre Optical Security Lab</title>
+<style>
+:root{
+  --bg:#07101d;--panel:#0d1a2b;--panel2:#111f33;--line:#21344d;--text:#e8f0fa;
+  --muted:#93a7bf;--cyan:#52d3ff;--green:#5ce1a1;--amber:#ffc857;--red:#ff6b6b;--violet:#b783ff;
+}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 30% 0,#11243b,#07101d 42%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:28px 30px 20px;border-bottom:1px solid var(--line);background:rgba(5,13,24,.82);position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+h1{font-size:28px;margin:0 0 6px;letter-spacing:-.5px}.sub{color:var(--muted);max-width:1100px;line-height:1.5}.badge{display:inline-block;margin-left:10px;border:1px solid #35506f;border-radius:999px;padding:3px 8px;font-size:11px;color:#a9bfd7;vertical-align:middle}
+main{max-width:1520px;margin:auto;padding:22px}.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
+.card{background:linear-gradient(180deg,rgba(18,33,53,.95),rgba(11,24,41,.95));border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 50px rgba(0,0,0,.18);overflow:hidden}
+.card h2,.card h3{margin:0}.cardHead{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}.cardBody{padding:16px 18px}
+.small{font-size:12px;color:var(--muted)}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+canvas{width:100%;display:block;background:#071321;border-radius:12px;border:1px solid #1c3048}
+.controls{display:grid;gap:14px}.control{padding:12px;border:1px solid var(--line);border-radius:12px;background:rgba(7,18,31,.7)}
+.control label{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#c7d5e5;margin-bottom:8px}.control strong{color:white;font-weight:650}.control input[type=range]{width:100%;accent-color:#64cfff}.control select{width:100%;background:#091726;border:1px solid #29415e;border-radius:8px;color:white;padding:9px}
+button{background:#17324f;border:1px solid #365a80;color:white;padding:9px 12px;border-radius:9px;cursor:pointer;font-weight:650}button:hover{background:#1e4268}.btnRow{display:flex;gap:8px;flex-wrap:wrap}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}.metric{background:#081625;border:1px solid #1e334b;border-radius:11px;padding:12px}.metric .v{font-size:23px;font-weight:750;margin-top:2px}.metric .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+.green{color:var(--green)}.amber{color:var(--amber)}.red{color:var(--red)}.cyan{color:var(--cyan)}.violet{color:var(--violet)}
+.two{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:18px}.eq{padding:10px 12px;background:#071522;border-left:3px solid #4cb8e8;border-radius:7px;margin:9px 0;font-size:13px;overflow:auto}.eq b{color:#fff}.note{border:1px solid #4d3e1b;background:#211b0c;color:#f6dda0;padding:12px;border-radius:10px;line-height:1.45;font-size:12px}
+.tableWrap{overflow:auto;max-height:340px}.table{width:100%;border-collapse:collapse;font-size:12px}.table th,.table td{border-bottom:1px solid #1d3148;padding:8px;text-align:right;white-space:nowrap}.table th:first-child,.table td:first-child{text-align:left}.table th{color:#96abc2;position:sticky;top:0;background:#0d1a2b}
+.previewGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.previewTitle{font-size:12px;margin:0 0 6px;color:#a9bdd3}
+.status{padding:11px 12px;border-radius:10px;background:#0a1726;border:1px solid #243c57;line-height:1.45;font-size:12px}.sweepBox{margin-top:10px;padding:12px;border-radius:10px;background:#071522;border:1px solid #28415c;min-height:64px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#a7bbd1}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}
+footer{max-width:1520px;margin:20px auto 40px;padding:0 22px;color:#8297af;font-size:12px;line-height:1.55}
+@media(max-width:1050px){.grid,.two{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){header{padding:20px}main{padding:12px}.metrics{grid-template-columns:1fr 1fr}.previewGrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Theatre Optical Security Lab <span class="badge">research simulator v1</span></h1>
+  <div class="sub">A live cyber-physical model of projector-independent optical anti-piracy: geometry → modulated light → screen reflection → human temporal integration vs. camera sampling → adversarial camera countermeasures.</div>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card">
+      <div class="cardHead">
+        <div><h2>1. Theatre geometry + optical flow</h2><div class="small">Animated paths show how each source reaches the screen and then the camera.</div></div>
+        <div class="legend">
+          <span><i class="dot" style="background:#52d3ff"></i>movie projector</span>
+          <span><i class="dot" style="background:#b783ff"></i>protection emitters</span>
+          <span><i class="dot" style="background:#ffc857"></i>screen → camera</span>
+        </div>
+      </div>
+      <div class="cardBody">
+        <canvas id="theatre" width="980" height="500"></canvas>
+        <div class="metrics">
+          <div class="metric"><div class="l">predicted bands/frame</div><div class="v cyan" id="mBands">—</div></div>
+          <div class="metric"><div class="l">camera degradation proxy</div><div class="v amber" id="mDegrade">—</div></div>
+          <div class="metric"><div class="l">human-visible proxy</div><div class="v green" id="mHuman">—</div></div>
+          <div class="metric"><div class="l">attack robustness</div><div class="v violet" id="mRobust">—</div></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card">
+      <div class="cardHead"><div><h2>Controls</h2><div class="small">Change the defense or the attacker.</div></div></div>
+      <div class="cardBody controls">
+        <div class="control"><label>Scenario <strong id="vPreset">Ordinary smartphone</strong></label>
+          <select id="preset">
+            <option value="phone">Ordinary smartphone</option>
+            <option value="highfps">High-FPS phone</option>
+            <option value="ircut">Strong IR-cut lens/filter</option>
+            <option value="manual">Manual anti-flicker exposure</option>
+            <option value="global">Global-shutter camera</option>
+          </select>
+        </div>
+        <div class="control"><label>Emitter placement <strong id="vPlacement">Projector-side rack</strong></label>
+          <select id="placement"><option value="projector">Projector-side rack</option><option value="screen">Screen-edge retrofit</option></select>
+        </div>
+        <div class="control"><label>Base modulation frequency <strong id="vFreq">720 Hz</strong></label><input id="freq" type="range" min="80" max="3000" step="10" value="720"></div>
+        <div class="control"><label>Modulation depth <strong id="vDepth">70%</strong></label><input id="depth" type="range" min="0" max="1" step="0.01" value="0.70"></div>
+        <div class="control"><label>Duty cycle <strong id="vDuty">50%</strong></label><input id="duty" type="range" min="0.10" max="0.90" step="0.01" value="0.50"></div>
+        <div class="control"><label>Phase spread across emitters <strong id="vPhase">240°</strong></label><input id="phase" type="range" min="0" max="330" step="10" value="240"></div>
+        <div class="control"><label>Spectral mode <strong id="vSpectrum">Hybrid</strong></label>
+          <select id="spectrum"><option value="visible">Visible 530 nm</option><option value="850">NIR 850 nm</option><option value="940">NIR 940 nm</option><option value="hybrid" selected>Hybrid visible + NIR</option></select>
+        </div>
+        <div class="control"><label>Camera FPS <strong id="vFps">30</strong></label><input id="fps" type="range" min="24" max="240" step="1" value="30"></div>
+        <div class="control"><label>Exposure time <strong id="vExposure">8.0 ms</strong></label><input id="exposure" type="range" min="0.5" max="33" step="0.5" value="8"></div>
+        <div class="control"><label>Sensor readout time <strong id="vReadout">18.0 ms</strong></label><input id="readout" type="range" min="0" max="33" step="0.5" value="18"></div>
+        <div class="control"><label>IR-cut rejection <strong id="vIrcut">45%</strong></label><input id="ircut" type="range" min="0" max="1" step="0.01" value="0.45"></div>
+        <div class="control"><label>Camera distance from screen <strong id="vDistance">12.0 m</strong></label><input id="distance" type="range" min="3" max="25" step="0.5" value="12"></div>
+        <div class="btnRow"><button id="sweep">Run adversarial sweep</button><button id="snapshot">Export snapshot</button></div>
+        <div id="sweepOut" class="sweepBox small">Run the sweep to search a grid of attacker camera settings and expose the current design's worst case.</div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="two">
+    <section class="card">
+      <div class="cardHead"><div><h2>2. What the human sees vs. what the camera samples</h2><div class="small">The same optical scene is integrated by two very different acquisition systems.</div></div></div>
+      <div class="cardBody">
+        <div class="previewGrid">
+          <div><p class="previewTitle">Human-view proxy</p><canvas id="human" width="500" height="260"></canvas></div>
+          <div><p class="previewTitle">Camera-capture proxy</p><canvas id="camera" width="500" height="260"></canvas></div>
+        </div>
+        <div style="margin-top:14px"><p class="previewTitle">Sensitivity across modulation frequency</p><canvas id="plot" width="1040" height="250"></canvas></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="cardHead"><div><h2>3. Live calculation inspector</h2><div class="small">Every displayed value is derived from the current controls.</div></div></div>
+      <div class="cardBody">
+        <div id="calc" class="status"></div>
+        <div class="eq mono"><b>Emitter:</b> Pᵢ(t)=P₀,ᵢ[1+mᵢs(t;fᵢ,φᵢ,Dᵢ)]</div>
+        <div class="eq mono"><b>Propagation:</b> Eᵢ,p(t)≈Pᵢ(t)Gᵢ(θ)/(4πrᵢ,p²)</div>
+        <div class="eq mono"><b>Screen:</b> Lₚ(t,λ)=ρ(λ)Eₚ(t,λ)/π</div>
+        <div class="eq mono"><b>Rolling shutter:</b> tᵧ=t₀+(y/H)T<sub>readout</sub></div>
+        <div class="eq mono"><b>Row exposure:</b> Cᵧ=(1/T<sub>exp</sub>)∫L(t)dt</div>
+        <div class="note"><b>Important:</b> the browser uses normalized optical units and a deliberately simplified perception/camera model. It is suitable for architecture reasoning, parameter sensitivity and experiment design — not for claiming real-world eye safety or universal camera defeat.</div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:18px">
+    <div class="cardHead"><div><h2>4. Per-emitter optical path ledger</h2><div class="small">Geometry, phase and time-of-flight update live. Speed of light effects are physically tiny here, but shown to keep the path accounting complete.</div></div></div>
+    <div class="cardBody tableWrap">
+      <table class="table">
+        <thead><tr><th>Emitter</th><th>phase</th><th>λ class</th><th>emitter→screen</th><th>screen→camera</th><th>total path</th><th>TOF</th><th>relative gain</th></tr></thead>
+        <tbody id="ledger"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <b>Research discipline:</b> use this tool to formulate hypotheses, select experiments and expose failure modes. Replace normalized gains with calibrated radiant-intensity, screen BRDF/spectral reflectance, camera spectral response and measured sensor timing before publication. Human testing must follow an appropriate ethics process and photobiological-safety review.
+</footer>
+
+<script>
+(function(){
+"use strict";
+var C=299792458;
+var q=function(id){return document.getElementById(id)};
+var els={
+  theatre:q("theatre"),human:q("human"),camera:q("camera"),plot:q("plot"),preset:q("preset"),placement:q("placement"),
+  freq:q("freq"),depth:q("depth"),duty:q("duty"),phase:q("phase"),spectrum:q("spectrum"),fps:q("fps"),
+  exposure:q("exposure"),readout:q("readout"),ircut:q("ircut"),distance:q("distance")
+};
+var ctx=els.theatre.getContext("2d"), hctx=els.human.getContext("2d"), cctx=els.camera.getContext("2d"), pctx=els.plot.getContext("2d");
+var t0=performance.now(), lastSweep=null;
+
+function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+function sinc(x){return Math.abs(x)<1e-9?1:Math.sin(Math.PI*x)/(Math.PI*x)}
+function vals(){
+  return {
+    f:+els.freq.value,m:+els.depth.value,d:+els.duty.value,phase:+els.phase.value,spec:els.spectrum.value,
+    fps:+els.fps.value,texp:+els.exposure.value/1000,tread:+els.readout.value/1000,ircut:+els.ircut.value,
+    dist:+els.distance.value,placement:els.placement.value,global:els.preset.value==="global"
+  };
+}
+function spectral(v){
+  var visible=0,nir=0,label="";
+  if(v.spec==="visible"){visible=1;label="530 nm visible"}
+  if(v.spec==="850"){nir=1;label="850 nm NIR"}
+  if(v.spec==="940"){nir=.82;label="940 nm NIR"}
+  if(v.spec==="hybrid"){visible=.35;nir=.75;label="hybrid"}
+  var cam=visible + nir*(1-v.ircut)*0.95;
+  var human=visible;
+  return {camera:cam,human:human,label:label};
+}
+function model(v){
+  var sp=spectral(v);
+  var expAtt=Math.abs(sinc(v.f*v.texp));
+  var readPhase=2*Math.PI*v.f*v.tread;
+  var bands=v.global?0:v.f*v.tread;
+  var phaseD=Math.sin((v.phase*Math.PI/180)/2);
+  phaseD=Math.abs(phaseD);
+  var rolling=v.global?0.08:1;
+  var dutyPenalty=1-Math.abs(v.d-.5)*1.3;
+  var contrast=clamp(v.m*sp.camera*expAtt*rolling*dutyPenalty*(0.68+0.32*phaseD),0,1);
+  var frameAlias=Math.abs(Math.sin(Math.PI*v.f/Math.max(v.fps,1)));
+  var instability=clamp(v.m*sp.camera*(0.35+0.65*frameAlias)*0.45,0,1);
+  var degrade=clamp(100*(0.70*contrast+0.20*instability+0.10*phaseD*sp.camera*v.m),0,100);
+  var humanTF=1/Math.sqrt(1+Math.pow(v.f/90,2));
+  var human=clamp(100*v.m*sp.human*humanTF*(0.8+0.2*Math.abs(2*v.d-1)),0,100);
+  var robust=clamp(100*(0.50*(degrade/100)+0.30*phaseD+0.20*(v.spec==="hybrid"?1:.45))*(v.global?.55:1),0,100);
+  return {sp:sp,expAtt:expAtt,readPhase:readPhase,bands:bands,phaseD:phaseD,contrast:contrast,instability:instability,degrade:degrade,human:human,robust:robust};
+}
+function mapX(m){return 70+(30-m)*27}
+function mapY(m){return 250+m*21}
+function geometry(v){
+  var screen={x:880,y1:85,y2:415,cx:880,cy:250};
+  var projector={x:75,y:250};
+  var cam={x:mapX(v.dist),y:250};
+  var patches=[110,165,220,280,335,390].map(function(y){return {x:screen.cx,y:y}});
+  var emitters=[];
+  for(var i=0;i<6;i++){
+    if(v.placement==="projector") emitters.push({x:110,y:125+i*50});
+    else emitters.push({x:828,y:105+i*58});
+  }
+  return {screen:screen,projector:projector,cam:cam,patches:patches,emitters:emitters};
+}
+function pixToMeters(dx,dy){return Math.sqrt(dx*dx+dy*dy)/27}
+function line(a,b,color,w,alpha,dash){
+  ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=color;ctx.lineWidth=w||1.5;if(dash)ctx.setLineDash(dash);
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore();
+}
+function pulse(pathA,pathB,u,color){
+  var len1=Math.hypot(pathB.x-pathA.x,pathB.y-pathA.y), x=pathA.x+(pathB.x-pathA.x)*u,y=pathA.y+(pathB.y-pathA.y)*u;
+  ctx.save();ctx.fillStyle=color;ctx.shadowBlur=12;ctx.shadowColor=color;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fill();ctx.restore();
+}
+function drawTheatre(now){
+  var v=vals(),m=model(v),g=geometry(v),W=els.theatre.width,H=els.theatre.height;
+  ctx.clearRect(0,0,W,H);ctx.fillStyle="#06111d";ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="#16304a";ctx.lineWidth=1;
+  for(var x=20;x<W;x+=54){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(var y=20;y<H;y+=42){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  ctx.fillStyle="#0b2033";ctx.fillRect(45,70,55,360);ctx.fillStyle="#24425e";ctx.fillRect(56,228,31,44);
+  ctx.fillStyle="#d7efff";ctx.font="12px system-ui";ctx.fillText("existing",51,218);ctx.fillText("projector",48,287);
+  line(g.projector,{x:g.screen.cx,y:g.screen.cy},"#52d3ff",4,.45);
+  var coneTop={x:g.screen.cx,y:g.screen.y1+25}, coneBot={x:g.screen.cx,y:g.screen.y2-25};
+  ctx.save();ctx.fillStyle="rgba(82,211,255,.045)";ctx.beginPath();ctx.moveTo(g.projector.x,g.projector.y);ctx.lineTo(coneTop.x,coneTop.y);ctx.lineTo(coneBot.x,coneBot.y);ctx.closePath();ctx.fill();ctx.restore();
+  ctx.strokeStyle="#dbeeff";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(g.screen.cx,g.screen.y1);ctx.lineTo(g.screen.cx,g.screen.y2);ctx.stroke();
+  ctx.fillStyle="#9fb5ca";ctx.fillText("cinema screen",815,64);
+  var colors=["#b783ff","#d57cff","#9a8cff","#ca70ff","#8f7cff","#e17aff"];
+  for(var i=0;i<g.emitters.length;i++){
+    var e=g.emitters[i],p=g.patches[i],col=colors[i];
+    line(e,p,col,1.5,.75,[5,5]);line(p,g.cam,"#ffc857",1.1,.30,[3,5]);
+    ctx.save();ctx.fillStyle=col;ctx.shadowBlur=12;ctx.shadowColor=col;ctx.beginPath();ctx.arc(e.x,e.y,6,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.fillStyle="#cbb7f4";ctx.font="10px ui-monospace";ctx.fillText("E"+(i+1),e.x+9,e.y+3);
+    ctx.fillStyle="rgba(183,131,255,.65)";ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();
+    var u=((now/1000)*(0.25+i*.025)+i*.12)%1;pulse(e,p,u,col);
+    var u2=((now/1000)*.22+i*.09)%1;pulse(p,g.cam,u2,"#ffc857");
+  }
+  ctx.fillStyle="#ffcd63";ctx.beginPath();ctx.arc(g.cam.x,g.cam.y,9,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#ffcd63";ctx.lineWidth=2;ctx.strokeRect(g.cam.x-15,g.cam.y-10,30,20);
+  ctx.fillStyle="#ffe1a3";ctx.font="11px system-ui";ctx.fillText("camera",g.cam.x-22,g.cam.y+34);
+  ctx.fillStyle="#7d91a8";ctx.font="11px system-ui";ctx.fillText(v.dist.toFixed(1)+" m from screen",g.cam.x-45,g.cam.y+50);
+  for(var r=0;r<4;r++){for(var s=0;s<8;s++){var sx=300+r*110,sy=105+s*47;ctx.fillStyle="rgba(69,91,115,.38)";ctx.fillRect(sx-7,sy-6,14,12)}}
+  ctx.fillStyle="#b8cce0";ctx.font="12px system-ui";
+  ctx.fillText(v.placement==="projector"?"retrofit emitter rack near projection side":"screen-edge retrofit modules",118,35);
+  updateLedger(v,g);updateMetrics(v,m,g);drawPreviews(v,m,now);drawPlot(v);
+  requestAnimationFrame(drawTheatre);
+}
+function updateLedger(v,g){
+  var rows="",sp=spectral(v);
+  for(var i=0;i<6;i++){
+    var a=pixToMeters(g.emitters[i].x-g.patches[i].x,g.emitters[i].y-g.patches[i].y);
+    var b=pixToMeters(g.patches[i].x-g.cam.x,g.patches[i].y-g.cam.y);
+    var total=a+b,tof=total/C*1e9;
+    var phase=i*(v.phase/Math.max(1,5));
+    var gain=(1/(1+a*a))*(1/(1+b*b))*sp.camera;
+    rows+="<tr><td>E"+(i+1)+"</td><td>"+phase.toFixed(0)+"°</td><td>"+sp.label+"</td><td>"+a.toFixed(2)+" m</td><td>"+b.toFixed(2)+" m</td><td>"+total.toFixed(2)+" m</td><td>"+tof.toFixed(1)+" ns</td><td>"+gain.toExponential(2)+"</td></tr>";
+  }
+  q("ledger").innerHTML=rows;
+}
+function updateMetrics(v,m,g){
+  q("mBands").textContent=m.bands.toFixed(1);
+  q("mDegrade").textContent=m.degrade.toFixed(0)+"/100";
+  q("mHuman").textContent=m.human.toFixed(2)+"/100";
+  q("mRobust").textContent=m.robust.toFixed(0)+"/100";
+  q("vFreq").textContent=v.f.toFixed(0)+" Hz";q("vDepth").textContent=Math.round(v.m*100)+"%";q("vDuty").textContent=Math.round(v.d*100)+"%";
+  q("vPhase").textContent=v.phase.toFixed(0)+"°";q("vFps").textContent=v.fps.toFixed(0);q("vExposure").textContent=(v.texp*1000).toFixed(1)+" ms";
+  q("vReadout").textContent=(v.tread*1000).toFixed(1)+" ms";q("vIrcut").textContent=Math.round(v.ircut*100)+"%";q("vDistance").textContent=v.dist.toFixed(1)+" m";
+  q("vSpectrum").textContent=m.sp.label;q("vPlacement").textContent=v.placement==="projector"?"Projector-side rack":"Screen edge";
+  var cycles=v.f*v.texp, rowPhase=m.readPhase*180/Math.PI;
+  var text="<b>Current state</b><br>"+
+    "Exposure integrates <b>"+cycles.toFixed(2)+" modulation cycles</b>. The sinusoidal exposure-averaging factor |sinc(fT<sub>exp</sub>)| is <b>"+m.expAtt.toFixed(3)+"</b>.<br><br>"+
+    "Across one sensor readout, the optical waveform advances by <b>"+rowPhase.toFixed(0)+"°</b>, corresponding to about <b>"+m.bands.toFixed(1)+" cycles</b> from first row to last row "+
+    (v.global?"(global-shutter preset suppresses row-wise phase separation).":".")+"<br><br>"+
+    "Simplified camera spectral gain = <b>"+m.sp.camera.toFixed(3)+"</b>; human-visible spectral weight = <b>"+m.sp.human.toFixed(2)+"</b>.";
+  q("calc").innerHTML=text;
+}
+function movieBase(c,w,h){
+  var gr=c.createLinearGradient(0,0,w,h);gr.addColorStop(0,"#224a7a");gr.addColorStop(.55,"#77bfe0");gr.addColorStop(1,"#e7ad73");c.fillStyle=gr;c.fillRect(0,0,w,h);
+  c.fillStyle="#163955";c.beginPath();c.moveTo(0,h*.72);c.lineTo(w*.22,h*.28);c.lineTo(w*.35,h*.68);c.lineTo(w*.52,h*.20);c.lineTo(w*.72,h*.68);c.lineTo(w*.88,h*.35);c.lineTo(w,h*.70);c.lineTo(w,h);c.lineTo(0,h);c.closePath();c.fill();
+  c.fillStyle="#173044";c.fillRect(0,h*.76,w,h*.24);c.fillStyle="rgba(255,255,255,.75)";c.font="600 18px system-ui";c.fillText("NORMAL MOVIE FRAME",18,30);
+}
+function drawPreviews(v,m,now){
+  var w=els.human.width,h=els.human.height;hctx.clearRect(0,0,w,h);movieBase(hctx,w,h);
+  var humanOverlay=clamp(m.human/100,0,.18);hctx.fillStyle="rgba(255,255,255,"+humanOverlay+")";hctx.fillRect(0,0,w,h);
+  hctx.fillStyle="#66e2a7";hctx.fillRect(15,h-42,180,27);hctx.fillStyle="#04150d";hctx.font="700 12px system-ui";hctx.fillText("viewer impact proxy: "+m.human.toFixed(2),25,h-24);
+  cctx.clearRect(0,0,w,h);movieBase(cctx,w,h);
+  if(v.global){
+    var a=.08+.28*m.contrast*(.5+.5*Math.sin(now/170));cctx.fillStyle="rgba(116,64,180,"+a+")";cctx.fillRect(0,0,w,h);
+  }else{
+    var bands=Math.max(1,m.bands),phase=(now/1000*v.f)%1;
+    for(var y=0;y<h;y++){
+      var wave=.5+.5*Math.sin(2*Math.PI*(bands*y/h+phase));
+      var a=m.contrast*.48*wave;
+      if(a>.01){cctx.fillStyle="rgba(110,42,180,"+a+")";cctx.fillRect(0,y,w,1)}
+    }
+  }
+  var noise=m.instability*.18;
+  for(var n=0;n<120*noise;n++){cctx.fillStyle="rgba(255,255,255,"+(Math.random()*.18)+")";cctx.fillRect(Math.random()*w,Math.random()*h,Math.random()*8+1,1)}
+  cctx.fillStyle="#ffc857";cctx.fillRect(15,h-42,210,27);cctx.fillStyle="#241500";cctx.font="700 12px system-ui";cctx.fillText("camera degradation proxy: "+m.degrade.toFixed(0)+"/100",25,h-24);
+}
+function drawPlot(v){
+  var w=els.plot.width,h=els.plot.height;pctx.clearRect(0,0,w,h);pctx.fillStyle="#06111d";pctx.fillRect(0,0,w,h);
+  var left=55,right=20,top=18,bottom=34;
+  pctx.strokeStyle="#29445f";pctx.lineWidth=1;
+  for(var j=0;j<=4;j++){var yy=top+(h-top-bottom)*j/4;pctx.beginPath();pctx.moveTo(left,yy);pctx.lineTo(w-right,yy);pctx.stroke()}
+  function curve(kind,color){
+    pctx.strokeStyle=color;pctx.lineWidth=2;pctx.beginPath();
+    for(var x=0;x<=w-left-right;x++){
+      var f=80+(3000-80)*x/(w-left-right);var vv=Object.assign({},v,{f:f});var mm=model(vv);var val=kind==="camera"?mm.degrade:mm.human;
+      var py=top+(h-top-bottom)*(1-val/100),px=left+x;if(x===0)pctx.moveTo(px,py);else pctx.lineTo(px,py);
+    }pctx.stroke();
+  }
+  curve("camera","#ffc857");curve("human","#5ce1a1");
+  var fx=left+(v.f-80)/(3000-80)*(w-left-right);pctx.strokeStyle="#52d3ff";pctx.setLineDash([5,5]);pctx.beginPath();pctx.moveTo(fx,top);pctx.lineTo(fx,h-bottom);pctx.stroke();pctx.setLineDash([]);
+  pctx.fillStyle="#93a7bf";pctx.font="11px system-ui";pctx.fillText("80 Hz",left,h-12);pctx.fillText("3000 Hz",w-right-48,h-12);pctx.fillText("camera degradation",left+8,14);pctx.fillStyle="#5ce1a1";pctx.fillText("human proxy",left+132,14);
+}
+function applyPreset(name){
+  if(name==="phone"){els.fps.value=30;els.exposure.value=8;els.readout.value=18;els.ircut.value=.45}
+  if(name==="highfps"){els.fps.value=120;els.exposure.value=3;els.readout.value=7;els.ircut.value=.55}
+  if(name==="ircut"){els.fps.value=30;els.exposure.value=8;els.readout.value=18;els.ircut.value=.95}
+  if(name==="manual"){els.fps.value=30;els.exposure.value=(1000/els.freq.value).toFixed(2);els.readout.value=18;els.ircut.value=.55}
+  if(name==="global"){els.fps.value=60;els.exposure.value=4;els.readout.value=0;els.ircut.value=.65}
+  q("vPreset").textContent=els.preset.options[els.preset.selectedIndex].text;
+}
+els.preset.addEventListener("change",function(){applyPreset(els.preset.value)});
+
+q("sweep").addEventListener("click",function(){
+  var base=vals(),fpss=[24,30,60,120,240],exps=[1,2,4,8,16],reads=[5,10,18,28],cuts=[0,.5,.9,.98];
+  var total=0,good=0,worst={score:999,desc:""},sum=0;
+  fpss.forEach(function(fps){exps.forEach(function(ex){reads.forEach(function(rd){cuts.forEach(function(ic){
+    var vv=Object.assign({},base,{fps:fps,texp:ex/1000,tread:rd/1000,ircut:ic,global:false});
+    var mm=model(vv);total++;sum+=mm.degrade;if(mm.degrade>=30)good++;if(mm.degrade<worst.score)worst={score:mm.degrade,desc:fps+" fps, "+ex+" ms exposure, "+rd+" ms readout, "+Math.round(ic*100)+"% IR rejection"};
+  })})})});
+  var globals=[1,4,8,16].map(function(ex){var vv=Object.assign({},base,{fps:60,texp:ex/1000,tread:0,ircut:.8,global:true});return model(vv).degrade});
+  lastSweep={configs:total,coverage:good/total,mean:sum/total,worst:worst,globalMean:globals.reduce(function(a,b){return a+b},0)/globals.length};
+  q("sweepOut").innerHTML="<b>Adversarial grid:</b> "+total+" rolling-shutter configurations.<br>"+
+    "Degradation ≥30/100 in <b>"+(100*lastSweep.coverage).toFixed(1)+"%</b>; mean = <b>"+lastSweep.mean.toFixed(1)+"</b>.<br>"+
+    "Worst case = <b>"+lastSweep.worst.score.toFixed(1)+"/100</b> at "+lastSweep.worst.desc+".<br>"+
+    "Global-shutter reference mean = <b>"+lastSweep.globalMean.toFixed(1)+"/100</b>.<br><span class='small'>Interpretation: this is a model stress test, not empirical camera coverage.</span>";
+});
+q("snapshot").addEventListener("click",function(){
+  var v=vals(),m=model(v),payload={timestamp:new Date().toISOString(),parameters:v,derived:m,sweep:lastSweep,model:"Theatre Optical Security Lab v1"};
+  var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="optical-security-snapshot.json";a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},500);
+});
+["freq","depth","duty","phase","spectrum","fps","exposure","readout","ircut","distance","placement"].forEach(function(id){q(id).addEventListener("input",function(){if(els.preset.value==="manual"&&id==="freq")els.exposure.value=(1000/els.freq.value).toFixed(2)})});
+applyPreset("phone");requestAnimationFrame(drawTheatre);
+})();
+</script>
+</body>
+</html>
